@@ -34,6 +34,8 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+-- Drop trigger if exists, then create it
+DROP TRIGGER IF EXISTS update_repositories_updated_at ON repositories;
 CREATE TRIGGER update_repositories_updated_at BEFORE UPDATE ON repositories
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 

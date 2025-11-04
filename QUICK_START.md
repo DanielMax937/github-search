@@ -10,7 +10,7 @@ Get up and running with GitHub Repository Analyzer in 10 minutes.
 - [ ] Gemini CLI installed (`npm install -g @google/generative-ai-cli`)
 - [ ] Google API Key obtained
 
-## 5-Step Setup
+## 6-Step Setup
 
 ### Step 1: Install Dependencies (2 min)
 
@@ -19,7 +19,21 @@ cd /Users/daniel/Desktop/github-search
 npm install
 ```
 
-### Step 2: Database Setup (3 min)
+### Step 2: Install pgvector Extension (2 min)
+
+**This is required before creating the database!**
+
+```bash
+# macOS (Homebrew)
+brew install pgvector
+
+# Verify installation
+ls /opt/homebrew/share/postgresql@*/extension/vector.control
+```
+
+If you see the `vector.control` file listed, you're good to go!
+
+### Step 3: Database Setup (3 min)
 
 ```bash
 # Create database
@@ -32,7 +46,7 @@ psql github_search
 \q
 ```
 
-### Step 3: Configure Environment (1 min)
+### Step 4: Configure Environment (1 min)
 
 ```bash
 # Copy example
@@ -48,7 +62,7 @@ DATABASE_URL=postgresql://localhost:5432/github_search
 GOOGLE_API_KEY=your_actual_api_key_here
 ```
 
-### Step 4: Run Migrations (1 min)
+### Step 5: Run Migrations (1 min)
 
 ```bash
 npm run db:migrate
@@ -60,7 +74,9 @@ Connected to database
 Migration completed successfully
 ```
 
-### Step 5: Start Application (1 min)
+**Note:** The migration script is idempotent - it's safe to run multiple times. If it was partially run before, it will complete successfully.
+
+### Step 6: Start Application (1 min)
 
 ```bash
 npm run dev
@@ -79,6 +95,39 @@ Visit: http://localhost:3000
 7. Ask: "What is this project?"
 
 ## Troubleshooting
+
+### pgvector Extension Missing
+
+**Error:** `could not open extension control file ".../extension/vector.control"`
+
+**Solution:**
+```bash
+# Install pgvector
+brew install pgvector
+
+# Verify installation
+ls /opt/homebrew/share/postgresql@*/extension/vector.control
+
+# Then retry migration
+npm run db:migrate
+```
+
+### Trigger Already Exists Error
+
+**Error:** `trigger "update_repositories_updated_at" for relation "repositories" already exists`
+
+**Cause:** Migration was partially run before.
+
+**Solution:** This is now fixed! The migration script is idempotent. Just run it again:
+```bash
+npm run db:migrate
+```
+
+Your database is likely already set up correctly. You can verify with:
+```bash
+psql github_search -c "\dx"  # Should show 'vector' extension
+psql github_search -c "\dt"  # Should show 'repositories' and 'documents' tables
+```
 
 ### Database Connection Failed
 

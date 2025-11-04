@@ -219,6 +219,22 @@ const splitter = new RecursiveCharacterTextSplitter({
 - Check `DATABASE_URL` in `.env`
 - Ensure pgvector extension is installed: `SELECT * FROM pg_extension WHERE extname = 'vector';`
 
+### pgvector Extension Error
+
+**Error during migration:** `could not open extension control file ".../extension/vector.control"`
+
+**Solution:**
+```bash
+# macOS
+brew install pgvector
+
+# Verify installation
+ls /opt/homebrew/share/postgresql@*/extension/vector.control
+
+# Then retry migration
+npm run db:migrate
+```
+
 ### Gemini CLI Not Found
 
 - Install gemini-cli: Follow [official instructions](https://github.com/google/gemini-cli)
