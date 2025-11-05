@@ -110,10 +110,11 @@ Visit [http://localhost:3000](http://localhost:3000) to see the application.
 4. Wait for the process to complete (this may take a few minutes)
 
 **What happens during indexing:**
-- Repository is cloned to a temporary directory
+- Repository is cloned to `.temp/` directory in project root
 - Gemini CLI analyzes the entire codebase
 - Output is chunked and embedded using LangChain
 - Chunks are stored in the vector database
+- Temporary directory is automatically cleaned up after indexing
 
 ### Chatting with Repositories
 
@@ -247,6 +248,20 @@ For large repositories, increase Node.js memory:
 ```bash
 NODE_OPTIONS="--max-old-space-size=4096" npm run dev
 ```
+
+### Temporary Directory Cleanup
+
+Repositories are cloned to `.temp/` in the project root during indexing. They are automatically cleaned up after processing. If you need to manually clean up:
+
+```bash
+# Remove all temporary directories
+rm -rf .temp
+
+# Or check what's in there
+ls -la .temp
+```
+
+Note: The application automatically removes temp directories older than 1 hour on each new indexing operation.
 
 ## 🚢 Production Deployment
 

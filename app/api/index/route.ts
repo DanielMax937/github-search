@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { cloneRepository, cleanupTempDir, extractRepoName, isValidGitHubUrl } from '@/lib/git-operations';
+import { cloneRepository, cleanupTempDir, extractRepoName, isValidGitHubUrl, cleanupOldTempDirs } from '@/lib/git-operations';
 import { analyzeCodbaseWithGemini } from '@/lib/gemini-cli';
 import { splitTextIntoChunks } from '@/lib/langchain-utils';
 import { saveDocuments } from '@/lib/vector-store';
@@ -10,6 +10,9 @@ export async function POST(request: NextRequest) {
   let tempDir: string | null = null;
 
   try {
+    // Clean up old temporary directories before starting
+    await cleanupOldTempDirs();
+
     const body = await request.json();
     const { url } = body;
 

@@ -94,6 +94,8 @@ Visit: http://localhost:3000
 6. Select the repo
 7. Ask: "What is this project?"
 
+**Note:** During indexing, the repository is cloned to `.temp/` in your project root and automatically cleaned up afterward.
+
 ## Troubleshooting
 
 ### pgvector Extension Missing
