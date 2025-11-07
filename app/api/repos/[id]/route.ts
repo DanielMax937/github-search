@@ -12,7 +12,7 @@ export async function GET(request: NextRequest, { params }: Params) {
     const { id } = params;
 
     const result = await query(
-      `SELECT id, name, url, description, created_at, updated_at 
+      `SELECT id, name, url, description, analysis_en, analysis_zh, created_at, updated_at 
        FROM repositories 
        WHERE id = $1`,
       [id]

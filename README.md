@@ -6,6 +6,7 @@ A powerful Next.js application that indexes GitHub repositories using AI and ena
 
 - **🔍 Repository Indexing**: Clone and analyze any GitHub repository using Gemini AI
 - **💬 RAG Chat Interface**: Ask questions about indexed repositories with AI-powered responses
+- **🌍 Multi-Language Support**: Ask questions in any language - automatic translation powered by OpenAI
 - **📚 Document Management**: Add, view, and delete document chunks for each repository
 - **🎯 Multi-Repository Search**: Query across multiple repositories simultaneously
 - **⚡ Streaming Responses**: Real-time streaming chat responses for better UX
@@ -19,9 +20,10 @@ A powerful Next.js application that indexes GitHub repositories using AI and ena
 - **Tailwind CSS** for styling
 
 ### Backend & AI
-- **LangChain.js** for document processing and embeddings
-- **Google Gemini AI** for code analysis and chat
-- **PostgreSQL with pgvector** for vector storage
+- **LangChain.js** for document processing and RAG
+- **OpenAI** for embeddings (`text-embedding-3-small`) and chat (`gpt-4o-mini`)
+- **Google Gemini CLI** for initial code analysis
+- **PostgreSQL with pgvector** for vector storage (1536 dimensions)
 - **simple-git** for repository cloning
 
 ## 📋 Prerequisites
@@ -30,8 +32,9 @@ Before you begin, ensure you have the following installed:
 
 - **Node.js 18+** and npm/yarn
 - **PostgreSQL 15+** with pgvector extension
+- **OpenAI API Key** for embeddings and chat ([Get one here](https://platform.openai.com/api-keys))
+- **Google API Key** for Gemini CLI code analysis ([Get one here](https://makersuite.google.com/app/apikey))
 - **Gemini CLI** (`gemini`) - [Installation guide](https://github.com/google/gemini-cli)
-- **Google API Key** for Gemini API access
 
 ## 🚀 Installation
 
@@ -79,10 +82,17 @@ Edit `.env` and add your credentials:
 
 ```env
 DATABASE_URL=postgresql://username:password@localhost:5432/github_search
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_BASE_URL=https://api.openai.com/v1  # Optional, defaults to OpenAI API
 GOOGLE_API_KEY=your_google_api_key_here
 GEMINI_CLI_PATH=gemini
 NODE_ENV=development
 ```
+
+**Note:** 
+- `OPENAI_API_KEY` is used for embeddings and chat responses
+- `OPENAI_BASE_URL` (optional) - Use custom endpoint/proxy (defaults to `https://api.openai.com/v1`)
+- `GOOGLE_API_KEY` is only used for Gemini CLI code analysis
 
 ### 5. Run database migrations
 
@@ -111,10 +121,16 @@ Visit [http://localhost:3000](http://localhost:3000) to see the application.
 
 **What happens during indexing:**
 - Repository is cloned to `.temp/` directory in project root
-- Gemini CLI analyzes the entire codebase
+- Gemini CLI analyzes the entire codebase (generates overview and use cases)
+- Analysis is automatically translated to Chinese and saved in database
 - Output is chunked and embedded using LangChain
-- Chunks are stored in the vector database
+- Chunks are stored in the vector database with embeddings
 - Temporary directory is automatically cleaned up after indexing
+
+**📝 Analysis Storage:**
+- English analysis is chunked and embedded for RAG search
+- Chinese translation (`analysis_zh`) is stored in the `repositories` table
+- You can access the Chinese analysis via API: `GET /api/repos/{id}` → `analysis_zh` field
 
 ### Chatting with Repositories
 
@@ -128,6 +144,23 @@ Visit [http://localhost:3000](http://localhost:3000) to see the application.
 - "How does authentication work?"
 - "What are the main features?"
 - "Explain the database schema"
+
+**🌍 Multi-Language Support:**
+
+The chat interface now supports automatic translation! You can ask questions in any language:
+
+- **Chinese (中文)**: "这个项目是关于什么的？"
+- **Spanish (Español)**: "¿De qué trata este proyecto?"
+- **French (Français)**: "De quoi parle ce projet ?"
+- **Japanese (日本語)**: "このプロジェクトは何についてですか？"
+- **Korean (한국어)**: "이 프로젝트는 무엇에 관한 것인가요?"
+- And many more...
+
+**How it works:**
+1. Your question is automatically detected and translated to English
+2. RAG search is performed with the English query
+3. The answer is generated and translated back to your language
+4. Technical terms and code snippets remain in their original form
 
 ### Managing Repositories
 
@@ -263,6 +296,29 @@ ls -la .temp
 
 Note: The application automatically removes temp directories older than 1 hour on each new indexing operation.
 
+### Custom OpenAI Endpoint
+
+You can use a custom OpenAI endpoint by setting `OPENAI_BASE_URL`:
+
+```bash
+# Use OpenAI-compatible API (e.g., Azure OpenAI, LocalAI, etc.)
+OPENAI_BASE_URL=https://your-custom-endpoint.com/v1
+
+# Use a proxy
+OPENAI_BASE_URL=https://your-proxy.com/openai/v1
+
+# Use Azure OpenAI
+OPENAI_BASE_URL=https://your-resource.openai.azure.com/openai/deployments/your-deployment
+```
+
+**Common use cases:**
+- **Azure OpenAI**: Use your Azure OpenAI deployment
+- **OpenAI-compatible APIs**: LocalAI, FastChat, vLLM, etc.
+- **Proxy/Gateway**: Route through your own infrastructure
+- **Regional endpoints**: Use region-specific endpoints
+
+**Note:** If not set, defaults to `https://api.openai.com/v1`
+
 ## 🚢 Production Deployment
 
 ### Build the application
@@ -282,7 +338,8 @@ npm start
 Ensure all production environment variables are set:
 
 - `DATABASE_URL` - Production PostgreSQL connection
-- `GOOGLE_API_KEY` - Google API key
+- `OPENAI_API_KEY` - OpenAI API key (for embeddings and chat)
+- `GOOGLE_API_KEY` - Google API key (for Gemini CLI code analysis)
 - `NODE_ENV=production`
 
 ## 📝 License

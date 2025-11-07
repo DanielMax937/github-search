@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { similaritySearch } from '@/lib/vector-store';
-import { generateRAGResponse } from '@/lib/langchain-utils';
+import { generateRAGResponse, generateRAGResponseWithTranslation } from '@/lib/langchain-utils';
+import { translateToEnglish, getLanguageName } from '@/lib/translation';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,9 +16,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Perform similarity search
-    console.log('Performing similarity search...');
-    const relevantDocs = await similaritySearch(message, {
+    // Step 1: Translate question to English
+    console.log('Translating question to English...');
+    const { translatedText, originalLanguage, wasTranslated } = await translateToEnglish(message);
+    
+    if (wasTranslated) {
+      console.log(`Detected language: ${getLanguageName(originalLanguage)}`);
+      console.log(`Translated question: ${translatedText}`);
+    }
+
+    // Step 2: Perform similarity search with English query
+    console.log('Performing similarity search with English query...');
+    const relevantDocs = await similaritySearch(translatedText, {
       repositoryIds,
       limit: 5,
       threshold: 0.3,
@@ -35,9 +45,13 @@ export async function POST(request: NextRequest) {
     // Extract context from documents
     const context = relevantDocs.map((doc) => doc.content);
 
-    // Generate streaming response
+    // Step 3: Generate RAG response and translate back if needed
     console.log('Generating RAG response...');
-    const stream = await generateRAGResponse(message, context);
+    const stream = await generateRAGResponseWithTranslation(
+      translatedText,
+      context,
+      originalLanguage
+    );
 
     // Create a ReadableStream for the response
     const encoder = new TextEncoder();
@@ -60,6 +74,8 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'text/plain; charset=utf-8',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
+        'X-Original-Language': originalLanguage,
+        'X-Was-Translated': wasTranslated.toString(),
       },
     });
   } catch (error: any) {

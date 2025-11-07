@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 
 interface Repository {
@@ -5,6 +8,8 @@ interface Repository {
   name: string;
   url: string;
   description?: string;
+  analysis_en?: string;
+  analysis_zh?: string;
   created_at: string;
 }
 
@@ -13,6 +18,104 @@ interface RepoListProps {
   selectedRepoIds: string[];
   onToggleSelection: (id: string) => void;
   onDelete: (id: string) => void;
+}
+
+function RepoAnalysisCollapse({ repo }: { repo: Repository }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [language, setLanguage] = useState<'zh' | 'en'>('zh'); // Default Chinese
+
+  if (!repo.analysis_zh && !repo.analysis_en) {
+    return null; // Don't show if no analysis available
+  }
+
+  return (
+    <div className="mt-3 border-t border-gray-200 dark:border-gray-700 pt-3">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+      >
+        <span className="flex items-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className={`h-4 w-4 mr-2 transition-transform ${isOpen ? 'rotate-90' : ''}`}
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+              clipRule="evenodd"
+            />
+          </svg>
+          {isOpen ? '隐藏分析结果' : '查看分析结果'}
+        </span>
+        <span className="text-xs text-gray-500">
+          {isOpen ? '▲' : '▼'}
+        </span>
+      </button>
+
+      {isOpen && (
+        <div className="mt-3 bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+          {/* Language Toggle */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex gap-2">
+              {repo.analysis_zh && (
+                <button
+                  onClick={() => setLanguage('zh')}
+                  className={`px-3 py-1 text-sm rounded transition-colors ${
+                    language === 'zh'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  中文
+                </button>
+              )}
+              {repo.analysis_en && (
+                <button
+                  onClick={() => setLanguage('en')}
+                  className={`px-3 py-1 text-sm rounded transition-colors ${
+                    language === 'en'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  English
+                </button>
+              )}
+            </div>
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              AI 分析结果
+            </span>
+          </div>
+
+          {/* Analysis Content */}
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            {language === 'zh' && repo.analysis_zh && (
+              <div className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300">
+                {repo.analysis_zh}
+              </div>
+            )}
+            {language === 'en' && repo.analysis_en && (
+              <div className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300">
+                {repo.analysis_en}
+              </div>
+            )}
+            {language === 'en' && !repo.analysis_en && (
+              <div className="text-sm text-gray-500 dark:text-gray-400 italic">
+                English version not available for this repository.
+              </div>
+            )}
+            {language === 'zh' && !repo.analysis_zh && (
+              <div className="text-sm text-gray-500 dark:text-gray-400 italic">
+                中文版本不可用。
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function RepoList({
@@ -67,6 +170,9 @@ export default function RepoList({
                     <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
                       Indexed: {new Date(repo.created_at).toLocaleDateString()}
                     </p>
+
+                    {/* Collapsible Analysis Section */}
+                    <RepoAnalysisCollapse repo={repo} />
                   </div>
                 </div>
 

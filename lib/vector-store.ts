@@ -1,15 +1,18 @@
-import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
+import { OpenAIEmbeddings } from '@langchain/openai';
 import { query } from './db';
 import { Document } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
-if (!process.env.GOOGLE_API_KEY) {
-  throw new Error('GOOGLE_API_KEY environment variable is not set');
+if (!process.env.OPENAI_API_KEY) {
+  throw new Error('OPENAI_API_KEY environment variable is not set');
 }
 
-const embeddings = new GoogleGenerativeAIEmbeddings({
-  apiKey: process.env.GOOGLE_API_KEY,
-  modelName: 'models/embedding-001',
+const embeddings = new OpenAIEmbeddings({
+  openAIApiKey: process.env.OPENAI_API_KEY,
+  modelName: 'text-embedding-3-small', // 1536 dimensions
+  configuration: {
+    baseURL: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
+  },
 });
 
 /**

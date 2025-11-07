@@ -4,7 +4,7 @@ import { query } from '@/lib/db';
 export async function GET(request: NextRequest) {
   try {
     const result = await query(
-      `SELECT id, name, url, description, created_at, updated_at 
+      `SELECT id, name, url, description, analysis_en, analysis_zh, created_at, updated_at 
        FROM repositories 
        ORDER BY created_at DESC`
     );

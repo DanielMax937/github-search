@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS repositories (
     name VARCHAR(255) NOT NULL,
     url VARCHAR(500) NOT NULL UNIQUE,
     description TEXT,
+    analysis_en TEXT, -- English Gemini analysis result (original)
+    analysis_zh TEXT, -- Chinese translation of Gemini analysis result
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -17,7 +19,7 @@ CREATE TABLE IF NOT EXISTS documents (
     repository_id UUID REFERENCES repositories(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     metadata JSONB DEFAULT '{}',
-    embedding vector(768), -- Gemini embedding dimension is 768
+    embedding vector(1536), -- OpenAI text-embedding-3-small dimension is 1536
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

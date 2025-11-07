@@ -3,6 +3,8 @@ export interface Repository {
   name: string;
   url: string;
   description?: string;
+  analysis_en?: string; // English analysis result (original)
+  analysis_zh?: string; // Chinese translation of analysis result
   created_at: Date;
   updated_at: Date;
 }

@@ -4,6 +4,7 @@ import { cloneRepository, cleanupTempDir, extractRepoName, isValidGitHubUrl, cle
 import { analyzeCodbaseWithGemini } from '@/lib/gemini-cli';
 import { splitTextIntoChunks } from '@/lib/langchain-utils';
 import { saveDocuments } from '@/lib/vector-store';
+import { translateFromEnglish } from '@/lib/translation';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: NextRequest) {
@@ -56,8 +57,14 @@ export async function POST(request: NextRequest) {
       throw new Error('Gemini analysis returned empty result');
     }
 
-    // Step 3: Chunk the analysis
-    console.log('Step 3: Chunking document...');
+    // Step 3: Translate analysis to Chinese
+    console.log('Step 3: Translating analysis to Chinese...');
+    const analysisZh = await translateFromEnglish(analysisResult, 'Chinese');
+    console.log('Analysis result:', analysisZh);
+    console.log('Translation to Chinese completed');
+
+    // Step 4: Chunk the analysis
+    console.log('Step 4: Chunking document...');
     const chunks = await splitTextIntoChunks(analysisResult, {
       chunkSize: 1000,
       chunkOverlap: 200,
@@ -67,23 +74,23 @@ export async function POST(request: NextRequest) {
       throw new Error('Document chunking produced no results');
     }
 
-    // Step 4: Create repository record
-    console.log('Step 4: Creating repository record...');
+    // Step 5: Create repository record with both English and Chinese analysis
+    console.log('Step 5: Creating repository record...');
     const repositoryId = uuidv4();
     const repoName = extractRepoName(url);
 
     await query(
-      `INSERT INTO repositories (id, name, url, description)
-       VALUES ($1, $2, $3, $4)`,
-      [repositoryId, repoName, url, 'Analyzed by Gemini AI']
+      `INSERT INTO repositories (id, name, url, description, analysis_en, analysis_zh)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [repositoryId, repoName, url, 'Analyzed by Gemini AI', analysisResult, analysisZh]
     );
 
-    // Step 5: Save chunks with embeddings
-    console.log('Step 5: Generating embeddings and saving documents...');
+    // Step 6: Save chunks with embeddings
+    console.log('Step 6: Generating embeddings and saving documents...');
     const documentIds = await saveDocuments(repositoryId, chunks);
 
-    // Step 6: Cleanup
-    console.log('Step 6: Cleaning up temporary files...');
+    // Step 7: Cleanup
+    console.log('Step 7: Cleaning up temporary files...');
     if (tempDir) {
       await cleanupTempDir(tempDir);
     }
