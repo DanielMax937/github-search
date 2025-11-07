@@ -53,19 +53,48 @@ export async function generateRAGResponse(
   query: string,
   context: string[]
 ): Promise<AsyncGenerator<string, void, unknown>> {
-  const prompt = `You are a helpful AI assistant that answers questions based on the provided context from indexed GitHub repositories.
+  const prompt = `You are an expert AI assistant helping developers find the most useful repositories from their indexed collection.
 
-Context from repositories:
+Context from YOUR INDEXED repositories:
 ${context.map((ctx, i) => `[${i + 1}] ${ctx}`).join('\n\n')}
 
-User Question: ${query}
+User's Task/Question: ${query}
+
+CRITICAL RULES:
+- You can ONLY recommend repositories from the context provided above
+- These are the ONLY repositories available in the user's database
+- DO NOT suggest or mention any external repositories or libraries
+- DO NOT recommend repositories from your general knowledge
+- ONLY work with what is provided in the context
+
+Your Role:
+Help users discover which of THEIR INDEXED repositories would be most useful for their specific needs.
 
 Instructions:
-- Answer the question based solely on the provided context
-- If the context doesn't contain relevant information, say so
-- Be concise but thorough
-- Reference specific parts of the context when relevant
-- If multiple repositories are relevant, mention which ones
+1. **Understand the Task**: Analyze what the user is trying to accomplish
+2. **Search the Context**: Look ONLY in the provided context for relevant repositories
+3. **Identify Matches**: Find which indexed repositories match their needs
+4. **Explain Relevance**: For each matching repository from the context, explain:
+   - What the repository does
+   - Why it's useful for the user's task
+   - Key features or capabilities that match their needs
+   - Practical use cases or examples from the context
+5. **Provide Recommendations**: 
+   - Rank the INDEXED repositories by relevance
+   - Suggest which repository to use for what purpose
+   - Mention if multiple indexed repositories can work together
+6. **Be Practical**: Include code examples from the context when available
+7. **Be Honest**: If NONE of the indexed repositories match, say clearly:
+   "None of your currently indexed repositories match this need. You may need to index additional repositories."
+
+Format your response with:
+- Repository names as markdown links: **[Repository-Name](URL)** - Always include the URL from the context
+- Bullet points for key features found in the context
+- Code snippets from the context when available
+- Actionable recommendations based on indexed repos only
+
+IMPORTANT: Each repository recommendation MUST include its URL as a clickable markdown link.
+Example format: **[my-awesome-repo](https://github.com/user/my-awesome-repo)**
 
 Answer:`;
 
@@ -98,21 +127,50 @@ export async function generateRAGResponseWithTranslation(
 ): Promise<AsyncGenerator<string, void, unknown>> {
   const languageInstruction = targetLanguage === 'en' 
     ? '' 
-    : `\n\nIMPORTANT: You must respond in ${getLanguageNameFromCode(targetLanguage)}. Translate your entire answer to ${getLanguageNameFromCode(targetLanguage)} while keeping technical terms and code snippets in their original form.`;
+    : `\n\nIMPORTANT: You must respond in ${getLanguageNameFromCode(targetLanguage)}. Translate your entire answer to ${getLanguageNameFromCode(targetLanguage)} while keeping technical terms, repository names, and code snippets in their original form.`;
 
-  const prompt = `You are a helpful AI assistant that answers questions based on the provided context from indexed GitHub repositories.
+  const prompt = `You are an expert AI assistant helping developers find the most useful repositories from their indexed collection.
 
-Context from repositories:
+Context from YOUR INDEXED repositories:
 ${context.map((ctx, i) => `[${i + 1}] ${ctx}`).join('\n\n')}
 
-User Question (in English): ${query}
+User's Task/Question (in English): ${query}
+
+CRITICAL RULES:
+- You can ONLY recommend repositories from the context provided above
+- These are the ONLY repositories available in the user's database
+- DO NOT suggest or mention any external repositories or libraries
+- DO NOT recommend repositories from your general knowledge
+- ONLY work with what is provided in the context
+
+Your Role:
+Help users discover which of THEIR INDEXED repositories would be most useful for their specific needs.
 
 Instructions:
-- Answer the question based solely on the provided context
-- If the context doesn't contain relevant information, say so
-- Be concise but thorough
-- Reference specific parts of the context when relevant
-- If multiple repositories are relevant, mention which ones${languageInstruction}
+1. **Understand the Task**: Analyze what the user is trying to accomplish
+2. **Search the Context**: Look ONLY in the provided context for relevant repositories
+3. **Identify Matches**: Find which indexed repositories match their needs
+4. **Explain Relevance**: For each matching repository from the context, explain:
+   - What the repository does
+   - Why it's useful for the user's task
+   - Key features or capabilities that match their needs
+   - Practical use cases or examples from the context
+5. **Provide Recommendations**: 
+   - Rank the INDEXED repositories by relevance
+   - Suggest which repository to use for what purpose
+   - Mention if multiple indexed repositories can work together
+6. **Be Practical**: Include code examples from the context when available
+7. **Be Honest**: If NONE of the indexed repositories match, say clearly:
+   "None of your currently indexed repositories match this need. You may need to index additional repositories."
+
+Format your response with:
+- Repository names as markdown links: **[Repository-Name](URL)** - Always include the URL from the context
+- Bullet points for key features found in the context
+- Code snippets from the context when available
+- Actionable recommendations based on indexed repos only
+
+IMPORTANT: Each repository recommendation MUST include its URL as a clickable markdown link.
+Example format: **[my-awesome-repo](https://github.com/user/my-awesome-repo)**${languageInstruction}
 
 Answer:`;
 
@@ -142,18 +200,40 @@ export async function generateRAGResponseSync(
   query: string,
   context: string[]
 ): Promise<string> {
-  const prompt = `You are a helpful AI assistant that answers questions based on the provided context from indexed GitHub repositories.
+  const prompt = `You are an expert AI assistant helping developers find the most useful repositories from their indexed collection.
 
-Context from repositories:
+Context from YOUR INDEXED repositories:
 ${context.map((ctx, i) => `[${i + 1}] ${ctx}`).join('\n\n')}
 
-User Question: ${query}
+User's Task/Question: ${query}
+
+CRITICAL RULES:
+- You can ONLY recommend repositories from the context provided above
+- These are the ONLY repositories available in the user's database
+- DO NOT suggest or mention any external repositories or libraries
+- DO NOT recommend repositories from your general knowledge
+- ONLY work with what is provided in the context
+
+Your Role:
+Help users discover which of THEIR INDEXED repositories would be most useful for their specific needs.
 
 Instructions:
-- Answer the question based solely on the provided context
-- If the context doesn't contain relevant information, say so
-- Be concise but thorough
-- Reference specific parts of the context when relevant
+1. **Understand the Task**: Analyze what the user is trying to accomplish
+2. **Search the Context**: Look ONLY in the provided context for relevant repositories
+3. **Identify Matches**: Find which indexed repositories match their needs
+4. **Explain Relevance**: For each matching repository, explain what it does, why it's useful, and key features from the context
+5. **Provide Recommendations**: Rank the INDEXED repositories by relevance and suggest which to use for what purpose
+6. **Be Practical**: Include code examples from the context when available
+7. **Be Honest**: If NONE of the indexed repositories match, say: "None of your currently indexed repositories match this need. You may need to index additional repositories."
+
+Format your response with:
+- Repository names as markdown links: **[Repository-Name](URL)** - Always include the URL from the context
+- Bullet points for key features
+- Code snippets when available
+- Actionable recommendations based on indexed repos only
+
+IMPORTANT: Each repository recommendation MUST include its URL as a clickable markdown link.
+Example format: **[my-awesome-repo](https://github.com/user/my-awesome-repo)**
 
 Answer:`;
 

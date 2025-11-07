@@ -1,16 +1,19 @@
 # GitHub Repository Analyzer
 
-A powerful Next.js application that indexes GitHub repositories using AI and enables intelligent chat interactions through Retrieval-Augmented Generation (RAG).
+A powerful Next.js application that indexes GitHub repositories using AI and helps you **discover the right repositories for your tasks** through intelligent chat interactions powered by Retrieval-Augmented Generation (RAG).
 
 ## 🌟 Features
 
 - **🔍 Repository Indexing**: Clone and analyze any GitHub repository using Gemini AI
-- **💬 RAG Chat Interface**: Ask questions about indexed repositories with AI-powered responses
+- **💬 Smart Repository Discovery**: AI-powered chat helps you find the perfect repository for your task
 - **🌍 Multi-Language Support**: Ask questions in any language - automatic translation powered by OpenAI
+- **📝 Markdown Rendering**: Rich markdown support in chat with syntax highlighting for code
+- **📡 SSE Streaming**: Server-Sent Events for reliable real-time response streaming
+- **🔎 Repository Search**: Filter repositories by name with real-time search
 - **📚 Document Management**: Add, view, and delete document chunks for each repository
 - **🎯 Multi-Repository Search**: Query across multiple repositories simultaneously
-- **⚡ Streaming Responses**: Real-time streaming chat responses for better UX
 - **🗄️ Vector Search**: Efficient similarity search using PostgreSQL with pgvector
+- **🌓 Analysis Viewer**: View AI analysis results in both Chinese and English with language toggle
 
 ## 🛠️ Tech Stack
 
@@ -18,6 +21,8 @@ A powerful Next.js application that indexes GitHub repositories using AI and ena
 - **Next.js 14+** with App Router
 - **React 18** with TypeScript
 - **Tailwind CSS** for styling
+- **React Markdown** with syntax highlighting (highlight.js)
+- **GitHub Flavored Markdown (GFM)** support
 
 ### Backend & AI
 - **LangChain.js** for document processing and RAG
@@ -318,6 +323,59 @@ OPENAI_BASE_URL=https://your-resource.openai.azure.com/openai/deployments/your-d
 - **Regional endpoints**: Use region-specific endpoints
 
 **Note:** If not set, defaults to `https://api.openai.com/v1`
+
+## 💬 Chat Features
+
+### Flexible Repository Selection
+- **Select specific repositories**: Choose one or more repositories to narrow your search
+- **Search all repositories**: When no repositories are selected, the system automatically searches across ALL indexed repositories
+- The chat interface clearly shows which repositories are being searched
+
+### Server-Sent Events (SSE)
+The chat interface uses **Server-Sent Events** for reliable real-time streaming:
+- Structured event messages (metadata, content, done, error)
+- Better error handling and recovery
+- Metadata support for translation information
+- Industry-standard streaming protocol
+
+### Markdown Rendering
+AI responses support rich markdown formatting:
+- **Code blocks** with syntax highlighting (180+ languages)
+- **Tables**, **lists**, and **blockquotes**
+- **Links** (open in new tab)
+- **GitHub Flavored Markdown (GFM)** features
+- **Dark mode** compatible styling
+
+#### Example Chat Queries:
+The chat is optimized for **repository discovery** - helping you find the right tools from your indexed collection:
+
+```
+"I need a library for authentication in Node.js"
+"Which repository can help me build a REST API?"
+"I'm looking for a tool to manage database migrations"
+"What's the best option for real-time communication?"
+"用中文告诉我哪个项目适合做前端开发" (Ask in any language)
+```
+
+**Important**: The AI will ONLY recommend from your **indexed repositories**:
+- ✅ Searches through YOUR indexed repositories
+- ✅ Recommends only what you've already indexed
+- ✅ Based on actual code analysis from your database
+- ❌ Will NOT suggest external repositories from the internet
+- ❌ Will NOT recommend libraries from general knowledge
+
+The AI will:
+- Identify relevant repositories from YOUR indexed collection
+- Provide **clickable repository URLs** in every recommendation
+- Explain why each indexed repository matches your needs
+- Provide practical usage examples from your repositories
+- Rank your indexed repositories by relevance
+- Suggest how your repositories can work together
+- Clearly state if none of your repositories match (suggesting you index more)
+
+**Clickable Links**: Every repository recommendation includes a markdown link so you can click directly to view the repository on GitHub.
+
+For detailed information about chat features, see [CHAT_IMPROVEMENTS.md](./CHAT_IMPROVEMENTS.md).
 
 ## 🚢 Production Deployment
 

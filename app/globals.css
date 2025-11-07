@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import highlight.js theme */
+@import 'highlight.js/styles/github-dark.css';
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -24,5 +27,73 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* Markdown styling for chat messages */
+.prose {
+  @apply text-gray-900 dark:text-gray-100;
+}
+
+.prose code {
+  @apply text-sm;
+}
+
+.prose pre {
+  @apply rounded-lg my-2 overflow-x-auto;
+}
+
+.prose pre code {
+  @apply block p-4;
+}
+
+.prose p {
+  @apply my-2;
+}
+
+.prose ul,
+.prose ol {
+  @apply my-2 ml-4;
+}
+
+.prose li {
+  @apply my-1;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  @apply font-bold my-3;
+}
+
+.prose h1 {
+  @apply text-2xl;
+}
+
+.prose h2 {
+  @apply text-xl;
+}
+
+.prose h3 {
+  @apply text-lg;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic my-2;
+}
+
+.prose table {
+  @apply w-full my-2 border-collapse;
+}
+
+.prose th,
+.prose td {
+  @apply border border-gray-300 dark:border-gray-600 px-3 py-2;
+}
+
+.prose th {
+  @apply bg-gray-100 dark:bg-gray-800 font-semibold;
 }
 

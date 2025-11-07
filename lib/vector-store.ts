@@ -81,7 +81,7 @@ export async function similaritySearch(
     // Generate embedding for query
     const queryEmbedding = await generateEmbedding(queryText);
 
-    // Build query with optional repository filter
+    // Build query with optional repository filter and join with repositories table
     let sql = `
       SELECT 
         d.id,
@@ -89,8 +89,11 @@ export async function similaritySearch(
         d.content,
         d.metadata,
         d.created_at,
+        r.name as repository_name,
+        r.url as repository_url,
         1 - (d.embedding <=> $1) as similarity
       FROM documents d
+      INNER JOIN repositories r ON d.repository_id = r.id
     `;
 
     const params: any[] = [`[${queryEmbedding.join(',')}]`];

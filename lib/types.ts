@@ -16,6 +16,9 @@ export interface Document {
   metadata?: Record<string, any>;
   embedding?: number[];
   created_at: Date;
+  repository_name?: string; // From JOIN with repositories table
+  repository_url?: string;  // From JOIN with repositories table
+  similarity?: number;       // From similarity search
 }
 
 export interface ChatMessage {

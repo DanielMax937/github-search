@@ -26,24 +26,36 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 2: Perform similarity search with English query
-    console.log('Performing similarity search with English query...');
+    const searchScope = repositoryIds && repositoryIds.length > 0 
+      ? `${repositoryIds.length} selected repositories`
+      : 'all repositories';
+    console.log(`Performing similarity search in ${searchScope}...`);
+    
     const relevantDocs = await similaritySearch(translatedText, {
-      repositoryIds,
+      repositoryIds: repositoryIds && repositoryIds.length > 0 ? repositoryIds : undefined,
       limit: 5,
       threshold: 0.3,
     });
 
     if (relevantDocs.length === 0) {
+      const errorMessage = repositoryIds && repositoryIds.length > 0
+        ? 'No relevant context found in the selected repositories. Try selecting different repositories or rephrasing your question.'
+        : 'No relevant context found. Please index at least one repository first.';
+      
       return new Response(
         JSON.stringify({
-          error: 'No relevant context found in indexed repositories',
+          error: errorMessage,
         }),
         { status: 404, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    // Extract context from documents
-    const context = relevantDocs.map((doc) => doc.content);
+    // Extract context from documents with repository information
+    const context = relevantDocs.map((doc) => {
+      const repoName = doc.repository_name || 'Unknown Repository';
+      const repoUrl = doc.repository_url || '';
+      return `Repository: ${repoName}\nURL: ${repoUrl}\n\n${doc.content}`;
+    });
 
     // Step 3: Generate RAG response and translate back if needed
     console.log('Generating RAG response...');
@@ -53,29 +65,50 @@ export async function POST(request: NextRequest) {
       originalLanguage
     );
 
-    // Create a ReadableStream for the response
+    // Create a ReadableStream for SSE (Server-Sent Events)
     const encoder = new TextEncoder();
     const readableStream = new ReadableStream({
       async start(controller) {
         try {
+          // Send metadata as first event
+          const metadata = {
+            originalLanguage,
+            wasTranslated,
+          };
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: 'metadata', data: metadata })}\n\n`)
+          );
+
+          // Stream content chunks
           for await (const chunk of stream) {
-            controller.enqueue(encoder.encode(chunk));
+            const data = {
+              type: 'content',
+              data: chunk,
+            };
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
           }
+
+          // Send done event
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
           controller.close();
         } catch (error) {
           console.error('Streaming error:', error);
-          controller.error(error);
+          const errorData = {
+            type: 'error',
+            data: error instanceof Error ? error.message : 'Unknown error',
+          };
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorData)}\n\n`));
+          controller.close();
         }
       },
     });
 
     return new Response(readableStream, {
       headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Cache-Control': 'no-cache',
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
-        'X-Original-Language': originalLanguage,
-        'X-Was-Translated': wasTranslated.toString(),
+        'X-Accel-Buffering': 'no', // Disable buffering in nginx
       },
     });
   } catch (error: any) {
