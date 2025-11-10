@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-export default function IndexPage() {
-  const [url, setUrl] = useState('');
+export default function IndexLocalPage() {
+  const [localPath, setLocalPath] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -18,22 +18,22 @@ export default function IndexPage() {
     setSuccess('');
 
     try {
-      const response = await fetch('/api/index', {
+      const response = await fetch('/api/index-local', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ localPath }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to index repository');
+        throw new Error(data.error || 'Failed to index local repository');
       }
 
       setSuccess(data.message);
-      setUrl('');
+      setLocalPath('');
 
       // Redirect to repos page after 2 seconds
       setTimeout(() => {
@@ -51,41 +51,48 @@ export default function IndexPage() {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-3xl font-bold">
-            Index GitHub Repository
+            Index Local Repository
           </h1>
           <Link
-            href="/index-local"
+            href="/"
             className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
           >
-            Index Local Repo →
+            Index from URL →
           </Link>
         </div>
         <p className="text-gray-600 dark:text-gray-400 text-center mb-8">
-          Analyze and index any public GitHub repository using AI
+          Analyze and index a local GitHub repository using AI
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label
-              htmlFor="repo-url"
+              htmlFor="local-path"
               className="block text-sm font-medium mb-2"
             >
-              Repository URL
+              Local Repository Path
             </label>
             <input
-              id="repo-url"
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://github.com/username/repository"
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700"
+              id="local-path"
+              type="text"
+              value={localPath}
+              onChange={(e) => setLocalPath(e.target.value)}
+              placeholder="/Users/username/projects/my-repo"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 font-mono text-sm"
               required
               disabled={loading}
             />
-            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-              Enter the full GitHub repository URL (e.g.,
-              https://github.com/user/repo)
-            </p>
+            <div className="mt-2 space-y-1">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Enter the absolute path to a local git repository
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                💡 Example: <span className="font-mono">/Users/username/projects/my-repo</span>
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                ⚠️ The directory must contain a .git folder and have a remote URL configured
+              </p>
+            </div>
           </div>
 
           <button
@@ -115,17 +122,18 @@ export default function IndexPage() {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Indexing Repository...
+                Indexing Local Repository...
               </span>
             ) : (
-              'Index Repository'
+              'Index Local Repository'
             )}
           </button>
         </form>
 
         {error && (
           <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <p className="text-red-800 dark:text-red-200">{error}</p>
+            <p className="text-red-800 dark:text-red-200 font-medium">Error</p>
+            <p className="text-red-700 dark:text-red-300 text-sm mt-1">{error}</p>
           </div>
         )}
 
@@ -144,7 +152,8 @@ export default function IndexPage() {
               Processing...
             </p>
             <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-              <li>• Cloning repository</li>
+              <li>• Validating local repository</li>
+              <li>• Extracting repository information</li>
               <li>• Analyzing with Gemini AI</li>
               <li>• Creating embeddings</li>
               <li>• Saving to database</li>
@@ -156,9 +165,57 @@ export default function IndexPage() {
         )}
       </div>
 
+      <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
+        <h2 className="text-lg font-semibold mb-3 text-blue-900 dark:text-blue-100">
+          📋 Requirements
+        </h2>
+        <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
+          <li className="flex items-start">
+            <span className="mr-2">✓</span>
+            <span>The directory must be a valid git repository (contains .git folder)</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">✓</span>
+            <span>The repository must have a remote URL configured (e.g., origin)</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">✓</span>
+            <span>Use absolute paths (e.g., /Users/username/projects/repo)</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">✓</span>
+            <span>The application needs read access to the directory</span>
+          </li>
+        </ul>
+      </div>
+
+      <div className="mt-6 bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+        <h2 className="text-lg font-semibold mb-3">
+          ⚡ Benefits of Local Indexing
+        </h2>
+        <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            <span><strong>Faster:</strong> No need to clone the repository</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            <span><strong>Private Repos:</strong> Index repositories that aren't publicly accessible</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            <span><strong>Current State:</strong> Analyzes your working directory as-is</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            <span><strong>No Duplicates:</strong> Uses existing repository data</span>
+          </li>
+        </ul>
+      </div>
+
       <div className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
         <p>
-          This tool clones and analyzes the entire codebase using Gemini AI
+          This tool analyzes your local repository using Gemini AI without cloning
         </p>
       </div>
     </div>

@@ -110,3 +110,56 @@ export async function cleanupOldTempDirs(): Promise<void> {
     // Don't throw - this is a best-effort cleanup
   }
 }
+
+/**
+ * Validate if a local path is a valid git repository
+ */
+export async function isValidGitRepository(localPath: string): Promise<boolean> {
+  try {
+    // Check if path exists
+    await fs.access(localPath);
+    
+    // Check if .git directory exists
+    const gitDir = path.join(localPath, '.git');
+    await fs.access(gitDir);
+    
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get the remote URL from a local git repository
+ */
+export async function getRemoteUrl(localPath: string): Promise<string> {
+  try {
+    const git = simpleGit(localPath);
+    const remotes = await git.getRemotes(true);
+    
+    // Try to find 'origin' remote first
+    const origin = remotes.find(remote => remote.name === 'origin');
+    if (origin && origin.refs.fetch) {
+      return origin.refs.fetch;
+    }
+    
+    // If no origin, return the first remote
+    if (remotes.length > 0 && remotes[0].refs.fetch) {
+      return remotes[0].refs.fetch;
+    }
+    
+    throw new Error('No remote URL found in repository');
+  } catch (error) {
+    console.error('Error getting remote URL:', error);
+    throw error;
+  }
+}
+
+/**
+ * Extract repository name from local path
+ */
+export function extractRepoNameFromPath(localPath: string): string {
+  // Get the folder name
+  const folderName = path.basename(localPath);
+  return folderName || 'unknown-repo';
+}

@@ -4,16 +4,25 @@ A powerful Next.js application that indexes GitHub repositories using AI and hel
 
 ## 🌟 Features
 
-- **🔍 Repository Indexing**: Clone and analyze any GitHub repository using Gemini AI
+### Repository Indexing
+- **🔍 Index from URL**: Clone and analyze any public GitHub repository using Gemini AI
+- **📁 Index Local Repos**: Analyze local repositories without cloning - faster and supports private repos
+
+### AI-Powered Chat
 - **💬 Smart Repository Discovery**: AI-powered chat helps you find the perfect repository for your task
 - **🌍 Multi-Language Support**: Ask questions in any language - automatic translation powered by OpenAI
 - **📝 Markdown Rendering**: Rich markdown support in chat with syntax highlighting for code
 - **📡 SSE Streaming**: Server-Sent Events for reliable real-time response streaming
+
+### Repository Management
 - **🔎 Repository Search**: Filter repositories by name with real-time search
 - **📚 Document Management**: Add, view, and delete document chunks for each repository
 - **🎯 Multi-Repository Search**: Query across multiple repositories simultaneously
-- **🗄️ Vector Search**: Efficient similarity search using PostgreSQL with pgvector
 - **🌓 Analysis Viewer**: View AI analysis results in both Chinese and English with language toggle
+
+### Technical Features
+- **🗄️ Vector Search**: Efficient similarity search using PostgreSQL with pgvector
+- **🔗 Clickable References**: Repository recommendations include clickable URLs
 
 ## 🛠️ Tech Stack
 
@@ -119,6 +128,10 @@ Visit [http://localhost:3000](http://localhost:3000) to see the application.
 
 ### Indexing a Repository
 
+You have **two ways** to index repositories:
+
+#### Option 1: Index from URL (Public Repositories)
+
 1. Navigate to the home page (`/`)
 2. Enter a GitHub repository URL (e.g., `https://github.com/user/repo`)
 3. Click "Index Repository"
@@ -132,7 +145,36 @@ Visit [http://localhost:3000](http://localhost:3000) to see the application.
 - Chunks are stored in the vector database with embeddings
 - Temporary directory is automatically cleaned up after indexing
 
-**📝 Analysis Storage:**
+#### Option 2: Index Local Repository ⚡ (Faster, Supports Private Repos)
+
+1. Navigate to the local index page (`/index-local`)
+2. Enter the **absolute path** to your local git repository
+   - Example: `/Users/username/projects/my-repo`
+3. Click "Index Local Repository"
+4. Wait for the process to complete
+
+**Requirements for local indexing:**
+- ✓ Directory must be a valid git repository (contains `.git` folder)
+- ✓ Repository must have a remote URL configured (e.g., `origin`)
+- ✓ Use absolute paths (not relative paths like `./my-repo`)
+- ✓ Application needs read access to the directory
+
+**Benefits of local indexing:**
+- ⚡ **Faster** - No cloning needed
+- 🔒 **Private Repos** - Index repositories that aren't publicly accessible
+- 📊 **Current State** - Analyzes your working directory as-is (including uncommitted changes)
+- 💾 **No Duplicates** - Uses existing repository data
+
+**What happens during local indexing:**
+- Validates the local path is a git repository
+- Extracts remote URL from git configuration
+- Gemini CLI analyzes the codebase directly from local path
+- Analysis is automatically translated to Chinese and saved in database
+- Output is chunked and embedded using LangChain
+- Chunks are stored in the vector database with embeddings
+- **No cloning or cleanup needed** - uses your existing repository
+
+**📝 Analysis Storage (Both Methods):**
 - English analysis is chunked and embedded for RAG search
 - Chinese translation (`analysis_zh`) is stored in the `repositories` table
 - You can access the Chinese analysis via API: `GET /api/repos/{id}` → `analysis_zh` field
@@ -179,7 +221,8 @@ The chat interface now supports automatic translation! You can ask questions in 
 
 ### Repository Management
 
-- `POST /api/index` - Index a new repository
+- `POST /api/index` - Index a new repository from URL
+- `POST /api/index-local` - Index a local repository from file path
 - `GET /api/repos` - List all repositories
 - `GET /api/repos/[id]` - Get single repository
 - `PUT /api/repos/[id]` - Update repository
