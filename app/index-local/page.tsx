@@ -53,12 +53,21 @@ export default function IndexLocalPage() {
           <h1 className="text-3xl font-bold">
             Index Local Repository
           </h1>
-          <Link
-            href="/"
-            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-          >
-            Index from URL →
-          </Link>
+          <div className="flex gap-2 text-sm">
+            <Link
+              href="/"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Index from URL
+            </Link>
+            <span className="text-gray-400">|</span>
+            <Link
+              href="/index-manual"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Index Manual
+            </Link>
+          </div>
         </div>
         <p className="text-gray-600 dark:text-gray-400 text-center mb-8">
           Analyze and index a local GitHub repository using AI

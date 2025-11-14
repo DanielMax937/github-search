@@ -16,6 +16,7 @@ export default function Navigation() {
   const navItems = [
     { href: '/', label: '📥 Index from URL', exact: true },
     { href: '/index-local', label: '📁 Index Local', exact: false },
+    { href: '/index-manual', label: '📝 Index Manual', exact: false },
     { href: '/repos', label: '💬 Chat & Repos', exact: false },
   ];
 
