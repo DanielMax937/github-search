@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function IndexManualPage() {
-  const [url, setUrl] = useState('');
+  const [repoUrl, setRepoUrl] = useState('');
+  const [docsUrl, setDocsUrl] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [document, setDocument] = useState('');
+  const [maxPages, setMaxPages] = useState('50');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -27,10 +28,11 @@ export default function IndexManualPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          url, 
+          repoUrl, 
+          docsUrl,
           name: name || undefined,
           description: description || undefined,
-          document 
+          maxPages: parseInt(maxPages) || 50,
         }),
       });
 
@@ -41,10 +43,11 @@ export default function IndexManualPage() {
       }
 
       setSuccess(data.message);
-      setUrl('');
+      setRepoUrl('');
+      setDocsUrl('');
       setName('');
       setDescription('');
-      setDocument('');
+      setMaxPages('50');
 
       // Redirect to repos page after 2 seconds
       setTimeout(() => {
@@ -62,7 +65,7 @@ export default function IndexManualPage() {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-3xl font-bold">
-            Index with Custom Documents
+            Index from Documentation URL
           </h1>
           <div className="flex gap-2 text-sm">
             <Link
@@ -81,7 +84,7 @@ export default function IndexManualPage() {
           </div>
         </div>
         <p className="text-gray-600 dark:text-gray-400 mb-8">
-          Manually provide repository URL and documents to index (no AI analysis needed)
+          Automatically fetch and index documentation from a URL (no AI code analysis)
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -95,8 +98,8 @@ export default function IndexManualPage() {
             <input
               id="repo-url"
               type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
+              value={repoUrl}
+              onChange={(e) => setRepoUrl(e.target.value)}
               placeholder="https://github.com/username/repository"
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700"
               required
@@ -104,6 +107,28 @@ export default function IndexManualPage() {
             />
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
               Enter the GitHub repository URL for reference
+            </p>
+          </div>
+
+          <div>
+            <label
+              htmlFor="docs-url"
+              className="block text-sm font-medium mb-2"
+            >
+              Documentation URL <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="docs-url"
+              type="url"
+              value={docsUrl}
+              onChange={(e) => setDocsUrl(e.target.value)}
+              placeholder="https://docs.example.com or https://github.com/user/repo/wiki"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700"
+              required
+              disabled={loading}
+            />
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              URL to documentation site with navigation links (e.g., docs, wiki, README site)
             </p>
           </div>
 
@@ -145,37 +170,30 @@ export default function IndexManualPage() {
 
           <div>
             <label
-              htmlFor="document"
+              htmlFor="max-pages"
               className="block text-sm font-medium mb-2"
             >
-              Document Content <span className="text-red-500">*</span>
+              Max Pages to Fetch <span className="text-gray-400 text-xs">(optional)</span>
             </label>
-            <textarea
-              id="document"
-              value={document}
-              onChange={(e) => setDocument(e.target.value)}
-              placeholder="Paste your document content here...
-
-This could be:
-- README content
-- API documentation
-- Project overview
-- Technical specifications
-- User guides
-- Any text content you want to index"
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 font-mono text-sm"
-              rows={15}
-              required
+            <input
+              id="max-pages"
+              type="number"
+              min="1"
+              max="200"
+              value={maxPages}
+              onChange={(e) => setMaxPages(e.target.value)}
+              placeholder="50"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700"
               disabled={loading}
             />
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-              Paste the document content you want to index. This will be chunked and embedded for search.
+              Maximum number of documentation pages to fetch (default: 50)
             </p>
           </div>
 
           <button
             type="submit"
-            disabled={loading || !url || !document}
+            disabled={loading || !repoUrl || !docsUrl}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
@@ -200,7 +218,7 @@ This could be:
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Indexing Document...
+                Fetching & Indexing Documentation...
               </span>
             ) : (
               'Index Repository'
@@ -229,12 +247,15 @@ This could be:
               Processing...
             </p>
             <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-              <li>• Chunking document</li>
+              <li>• Loading documentation page</li>
+              <li>• Extracting navigation links</li>
+              <li>• Fetching content from each page</li>
+              <li>• Chunking documents</li>
               <li>• Creating embeddings</li>
               <li>• Saving to database</li>
             </ul>
             <p className="text-xs text-blue-600 dark:text-blue-400 mt-3">
-              This should only take a few seconds...
+              This may take 1-3 minutes depending on number of pages...
             </p>
           </div>
         )}
@@ -246,26 +267,49 @@ This could be:
         </h2>
         <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-2">
           <li>
-            <strong>Quick indexing:</strong> When you already have the documentation ready
+            <strong>Documentation sites:</strong> Index docs, wikis, or README sites with navigation
           </li>
           <li>
-            <strong>Selective content:</strong> Index only specific parts of a project
+            <strong>Automatic fetching:</strong> No need to copy/paste content manually
           </li>
           <li>
-            <strong>Custom documents:</strong> Add supplementary materials not in the repo
+            <strong>Multiple pages:</strong> Automatically fetches all linked pages from navigation
           </li>
           <li>
-            <strong>No AI analysis needed:</strong> Skip the automatic code analysis step
+            <strong>No AI analysis:</strong> Skips code analysis, uses documentation only
           </li>
           <li>
-            <strong>Faster processing:</strong> No cloning or AI analysis overhead
+            <strong>Faster than AI:</strong> No Gemini CLI overhead, just document processing
           </li>
         </ul>
       </div>
 
+      <div className="mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
+        <h2 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-3">
+          📋 Examples of Documentation URLs
+        </h2>
+        <ul className="text-sm text-yellow-800 dark:text-yellow-200 space-y-2">
+          <li>
+            <strong>GitHub Wiki:</strong> https://github.com/user/repo/wiki
+          </li>
+          <li>
+            <strong>Documentation Site:</strong> https://docs.example.com
+          </li>
+          <li>
+            <strong>README Site:</strong> https://readme.io or similar
+          </li>
+          <li>
+            <strong>GitBook:</strong> https://user.gitbook.io/project
+          </li>
+        </ul>
+        <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-3">
+          Make sure the URL contains navigation links to other documentation pages
+        </p>
+      </div>
+
       <div className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
         <p>
-          This method skips AI code analysis and uses your provided documents directly
+          This method uses Playwright to automatically fetch documentation from URLs
         </p>
       </div>
     </div>

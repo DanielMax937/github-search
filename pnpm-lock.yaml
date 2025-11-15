@@ -10,7 +10,7 @@ dependencies:
     version: 0.21.0
   '@langchain/community':
     specifier: ^0.3.15
-    version: 0.3.57(@browserbasehq/stagehand@1.14.0)(@ibm-cloud/watsonx-ai@1.7.2)(@langchain/core@0.3.79)(axios@1.13.1)(ibm-cloud-sdk-core@5.4.3)(openai@4.104.0)(pg@8.16.3)
+    version: 0.3.57(@browserbasehq/stagehand@1.14.0)(@ibm-cloud/watsonx-ai@1.7.2)(@langchain/core@0.3.79)(axios@1.13.1)(ibm-cloud-sdk-core@5.4.3)(openai@4.104.0)(pg@8.16.3)(playwright@1.56.1)
   '@langchain/core':
     specifier: ^0.3.24
     version: 0.3.79(openai@4.104.0)
@@ -32,6 +32,9 @@ dependencies:
   pg:
     specifier: ^8.13.1
     version: 8.16.3
+  playwright:
+    specifier: ^1.56.1
+    version: 1.56.1
   react:
     specifier: ^18
     version: 18.3.1
@@ -340,7 +343,7 @@ packages:
     resolution: {integrity: sha512-GaHYm+c0O9MjZRu0ongGBRbinu8gVAMd2UZjji6jVmqKtZluZnptXGWhz1E8j8D2HJ3f/yMxKAUC0b+57wncIw==}
     dev: false
 
-  /@langchain/community@0.3.57(@browserbasehq/stagehand@1.14.0)(@ibm-cloud/watsonx-ai@1.7.2)(@langchain/core@0.3.79)(axios@1.13.1)(ibm-cloud-sdk-core@5.4.3)(openai@4.104.0)(pg@8.16.3):
+  /@langchain/community@0.3.57(@browserbasehq/stagehand@1.14.0)(@ibm-cloud/watsonx-ai@1.7.2)(@langchain/core@0.3.79)(axios@1.13.1)(ibm-cloud-sdk-core@5.4.3)(openai@4.104.0)(pg@8.16.3)(playwright@1.56.1):
     resolution: {integrity: sha512-xUe5UIlh1yZjt/cMtdSVlCoC5xm/RMN/rp+KZGLbquvjQeONmQ2rvpCqWjAOgQ6SPLqKiXvoXaKSm20r+LHISw==}
     engines: {node: '>=18'}
     peerDependencies:
@@ -734,6 +737,7 @@ packages:
       langsmith: 0.3.77(openai@4.104.0)
       openai: 4.104.0(zod@3.25.76)
       pg: 8.16.3
+      playwright: 1.56.1
       uuid: 10.0.0
       zod: 3.25.76
     transitivePeerDependencies:

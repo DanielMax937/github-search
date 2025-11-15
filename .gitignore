@@ -38,3 +38,6 @@ next-env.d.ts
 
 # temporary cloned repositories
 .temp
+
+# fetched documentation files
+.docs
