@@ -10,6 +10,8 @@ export default function IndexManualPage() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [maxPages, setMaxPages] = useState('50');
+  const [useJinaAi, setUseJinaAi] = useState(false);
+  const [language, setLanguage] = useState<'english' | 'chinese'>('english');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -33,6 +35,8 @@ export default function IndexManualPage() {
           name: name || undefined,
           description: description || undefined,
           maxPages: parseInt(maxPages) || 50,
+          useJinaAi: useJinaAi,
+          language: language,
         }),
       });
 
@@ -48,6 +52,8 @@ export default function IndexManualPage() {
       setName('');
       setDescription('');
       setMaxPages('50');
+      setUseJinaAi(false);
+      setLanguage('english');
 
       // Redirect to repos page after 2 seconds
       setTimeout(() => {
@@ -189,6 +195,73 @@ export default function IndexManualPage() {
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
               Maximum number of documentation pages to fetch (default: 50)
             </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Documentation Language <span className="text-red-500">*</span>
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setLanguage('english')}
+                className={`px-4 py-3 rounded-lg border-2 transition-all ${
+                  language === 'english'
+                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium'
+                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                }`}
+                disabled={loading}
+              >
+                <div className="text-left">
+                  <div className="font-medium">English</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Store in analysis_en
+                  </div>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setLanguage('chinese')}
+                className={`px-4 py-3 rounded-lg border-2 transition-all ${
+                  language === 'chinese'
+                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium'
+                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                }`}
+                disabled={loading}
+              >
+                <div className="text-left">
+                  <div className="font-medium">中文</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Store in analysis_zh
+                  </div>
+                </div>
+              </button>
+            </div>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              Select the language of the documentation to store in the appropriate field
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-3 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+            <input
+              id="use-jina-ai"
+              type="checkbox"
+              checked={useJinaAi}
+              onChange={(e) => setUseJinaAi(e.target.checked)}
+              className="h-5 w-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+              disabled={loading}
+            />
+            <div className="flex-1">
+              <label
+                htmlFor="use-jina-ai"
+                className="block text-sm font-medium cursor-pointer"
+              >
+                Use Jina.ai Reader API
+              </label>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Enable this to fetch cleaner, markdown-formatted content via Jina.ai (recommended for better content extraction)
+              </p>
+            </div>
           </div>
 
           <button

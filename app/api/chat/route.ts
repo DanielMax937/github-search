@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const relevantDocs = await similaritySearch(translatedText, {
       repositoryIds: repositoryIds && repositoryIds.length > 0 ? repositoryIds : undefined,
       limit: 5,
-      threshold: 0.3,
+      threshold: 0.1,
     });
 
     if (relevantDocs.length === 0) {

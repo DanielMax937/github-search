@@ -111,7 +111,8 @@ export async function fetchPageContent(
   url: string, 
   title: string, 
   level: number, 
-  baseDir: string
+  baseDir: string,
+  useJinaAi: boolean = false
 ): Promise<string> {
   let browser: Browser | null = null;
   
@@ -119,8 +120,10 @@ export async function fetchPageContent(
     browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
     
-    console.log(`Fetching content from: ${url}`);
-    await page.goto(url);
+    // Use Jina.ai if flag is enabled
+    const fetchUrl = useJinaAi ? `https://r.jina.ai/${url}` : url;
+    console.log(`Fetching content from: ${fetchUrl}`);
+    await page.goto(fetchUrl);
     
     // Wait for content to load
     await page.waitForTimeout(10000);
@@ -171,7 +174,7 @@ ${content}
 /**
  * Fetch all documentation content from a base URL and save to local directory
  */
-export async function fetchAllDocumentation(baseUrl: string, maxPages: number = 50): Promise<string> {
+export async function fetchAllDocumentation(baseUrl: string, maxPages: number = 50, useJinaAi: boolean = false): Promise<string> {
   try {
     // Step 1: Extract all documentation links with hierarchy
     let links = await extractDocumentationLinks(baseUrl);
@@ -205,10 +208,11 @@ export async function fetchAllDocumentation(baseUrl: string, maxPages: number = 
       console.log(`Fetching page ${i + 1}/${linksToFetch.length}: ${link.title}`);
       
       const content = await fetchPageContent(
-        "https://r.jina.ai/" + link.url, 
+        link.url, 
         link.title, 
         link.level || 0, 
-        targetDir
+        targetDir,
+        useJinaAi
       );
       
       if (content && content.length > 100) { // Only include pages with substantial content

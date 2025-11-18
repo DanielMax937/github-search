@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { repoUrl, docsUrl, name, description, maxPages } = body;
+    const { repoUrl, docsUrl, name, description, maxPages, useJinaAi, language } = body;
 
     // Validate input
     if (!repoUrl || typeof repoUrl !== 'string') {
@@ -33,6 +33,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate language
+    const docLanguage = language === 'chinese' ? 'chinese' : 'english';
+    console.log(`Documentation language: ${docLanguage}`);
+
     // Check if repository already exists
     const existingRepo = await query(
       'SELECT id FROM repositories WHERE url = $1',
@@ -52,7 +56,8 @@ export async function POST(request: NextRequest) {
 
     // Step 2: Fetch documentation content using Playwright
     console.log('Step 2: Fetching documentation from URL...');
-    const documentContent = await fetchAllDocumentation(docsUrl, maxPages || 50);
+    console.log(`Using Jina.ai: ${useJinaAi ? 'Yes' : 'No'}`);
+    const documentContent = await fetchAllDocumentation(docsUrl, maxPages || 50, useJinaAi || false);
 
     if (!documentContent || documentContent.trim().length === 0) {
       throw new Error('No content could be fetched from the documentation URL');
@@ -71,18 +76,29 @@ export async function POST(request: NextRequest) {
       throw new Error('Document chunking produced no results');
     }
 
-    // Step 4: Create repository record (without Gemini analysis)
+    // Step 4: Create repository record with language-specific analysis field
     console.log('Step 4: Creating repository record...');
     const repositoryId = uuidv4();
     const repoDescription = description && description.trim() 
       ? description.trim() 
       : 'Indexed from documentation URL';
 
-    await query(
-      `INSERT INTO repositories (id, name, url, description)
-       VALUES ($1, $2, $3, $4)`,
-      [repositoryId, repoName, repoUrl, repoDescription]
-    );
+    // Store documentation in language-specific field
+    if (docLanguage === 'chinese') {
+      await query(
+        `INSERT INTO repositories (id, name, url, description, analysis_zh)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [repositoryId, repoName, repoUrl, repoDescription, documentContent]
+      );
+      console.log('Documentation stored in analysis_zh field');
+    } else {
+      await query(
+        `INSERT INTO repositories (id, name, url, description, analysis_en)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [repositoryId, repoName, repoUrl, repoDescription, documentContent]
+      );
+      console.log('Documentation stored in analysis_en field');
+    }
 
     // Step 5: Save chunks with embeddings
     console.log('Step 5: Generating embeddings and saving documents...');
