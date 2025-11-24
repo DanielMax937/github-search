@@ -41,7 +41,11 @@ export default function ReposPage() {
   }
 
   async function handleDeleteRepo(id: string) {
-    if (!confirm('Are you sure you want to delete this repository?')) {
+    // Get repository name for confirmation message
+    const repo = repositories.find(r => r.id === id);
+    const repoName = repo?.name || 'this repository';
+    
+    if (!confirm(`Are you sure you want to delete "${repoName}"?\n\nThis will also delete all indexed documents associated with this repository.`)) {
       return;
     }
 
@@ -55,11 +59,20 @@ export default function ReposPage() {
         throw new Error(data.error || 'Failed to delete repository');
       }
 
+      const data = await response.json();
+
       // Refresh list
       setRepositories((prev) => prev.filter((repo) => repo.id !== id));
       setSelectedRepoIds((prev) => prev.filter((repoId) => repoId !== id));
+
+      // Show success message with statistics
+      if (data.stats && data.stats.documentsDeleted > 0) {
+        alert(`✓ ${data.message}\n\n${data.stats.documentsDeleted} indexed documents were also deleted.`);
+      } else {
+        alert(`✓ ${data.message}`);
+      }
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      alert(`✗ Error: ${err.message}`);
     }
   }
 

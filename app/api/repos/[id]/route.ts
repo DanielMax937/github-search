@@ -107,21 +107,44 @@ export async function DELETE(request: NextRequest, { params }: Params) {
   try {
     const { id } = params;
 
-    const result = await query(
-      'DELETE FROM repositories WHERE id = $1 RETURNING id',
+    // Step 1: Check if repository exists and get info
+    const repoCheck = await query(
+      'SELECT id, name FROM repositories WHERE id = $1',
       [id]
     );
 
-    if (result.rows.length === 0) {
+    if (repoCheck.rows.length === 0) {
       return NextResponse.json(
         { error: 'Repository not found' },
         { status: 404 }
       );
     }
 
+    const repoName = repoCheck.rows[0].name;
+
+    // Step 2: Count documents to be deleted
+    const docCount = await query(
+      'SELECT COUNT(*) as count FROM documents WHERE repository_id = $1',
+      [id]
+    );
+
+    const documentsCount = parseInt(docCount.rows[0].count);
+    console.log(`Deleting repository "${repoName}" (${id}) with ${documentsCount} documents`);
+
+    // Step 3: Delete the repository (CASCADE will automatically delete documents)
+    const result = await query(
+      'DELETE FROM repositories WHERE id = $1 RETURNING id',
+      [id]
+    );
+
+    console.log(`Successfully deleted repository "${repoName}" and ${documentsCount} associated documents`);
+
     return NextResponse.json({
       success: true,
-      message: 'Repository deleted successfully',
+      message: `Repository "${repoName}" deleted successfully`,
+      stats: {
+        documentsDeleted: documentsCount,
+      },
     });
   } catch (error: any) {
     console.error('Error deleting repository:', error);
