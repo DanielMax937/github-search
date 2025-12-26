@@ -39,7 +39,7 @@ Analysis result should be English.
 
     // Execute gemini-cli with the prompt
     // Assuming gemini-cli accepts: gemini -p "prompt" path/to/code
-    const command = `cd "${repoPath}" && ${GEMINI_CLI_PATH} -p "${prompt}" -m	gemini-2.5-flash`;
+    const command = `cd "${repoPath}" && ${GEMINI_CLI_PATH} -p "${prompt}" -m gemini-3-pro-preview`;
 
     const { stdout, stderr } = await execAsync(command, {
       maxBuffer: 10 * 1024 * 1024, // 10MB buffer
