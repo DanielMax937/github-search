@@ -1,6 +1,38 @@
-import simpleGit from 'simple-git';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
+
+/**
+ * Execute a git command
+ */
+async function execGit(args: string[], cwd?: string): Promise<string> {
+  const command = `git ${args.join(' ')}`;
+  const options = cwd ? { cwd } : {};
+  
+  const { stdout, stderr } = await execAsync(command, options);
+  if (stderr && !stderr.includes('Cloning into')) {
+    console.warn('Git stderr:', stderr);
+  }
+  return stdout.trim();
+}
+
+/**
+ * Convert HTTPS GitHub URL to SSH format
+ * https://github.com/user/repo.git -> git@github.com:user/repo.git
+ * https://github.com/user/repo -> git@github.com:user/repo.git
+ */
+export function convertToSshUrl(url: string): string {
+  const httpsMatch = url.match(/^https:\/\/github\.com\/([^\/]+)\/([^\/]+?)(?:\.git)?$/);
+  if (httpsMatch) {
+    const [, user, repo] = httpsMatch;
+    return `git@github.com:${user}/${repo}.git`;
+  }
+  // Already SSH format or other format, return as-is
+  return url;
+}
 
 /**
  * Clone a GitHub repository to a temporary directory
@@ -11,15 +43,16 @@ export async function cloneRepository(repoUrl: string): Promise<string> {
   const tempBaseDir = path.join(projectRoot, '.temp');
   const tempDir = path.join(tempBaseDir, `repo-${Date.now()}`);
 
+  // Convert HTTPS URL to SSH format for SSH key authentication
+  const sshUrl = convertToSshUrl(repoUrl);
+
   try {
     // Ensure .temp directory exists
     await fs.mkdir(tempBaseDir, { recursive: true });
     await fs.mkdir(tempDir, { recursive: true });
-    
-    const git = simpleGit();
 
-    console.log(`Cloning repository from ${repoUrl} to ${tempDir}`);
-    await git.clone(repoUrl, tempDir);
+    console.log(`Cloning repository from ${sshUrl} to ${tempDir}`);
+    await execGit(['clone', sshUrl, tempDir]);
 
     return tempDir;
   } catch (error) {
@@ -61,8 +94,14 @@ export function extractRepoName(repoUrl: string): string {
     return match[1];
   }
 
+  // Handle SSH format: git@github.com:user/repo.git
+  const sshMatch = repoUrl.match(/:([^\/]+)\/([^\/]+?)(?:\.git)?$/);
+  if (sshMatch && sshMatch[2]) {
+    return sshMatch[2];
+  }
+
   // Fallback: return last part of URL
-  return repoUrl.split('/').pop() || 'unknown-repo';
+  return repoUrl.split('/').pop()?.replace('.git', '') || 'unknown-repo';
 }
 
 /**
@@ -134,18 +173,21 @@ export async function isValidGitRepository(localPath: string): Promise<boolean> 
  */
 export async function getRemoteUrl(localPath: string): Promise<string> {
   try {
-    const git = simpleGit(localPath);
-    const remotes = await git.getRemotes(true);
-    
-    // Try to find 'origin' remote first
-    const origin = remotes.find(remote => remote.name === 'origin');
-    if (origin && origin.refs.fetch) {
-      return origin.refs.fetch;
+    // Try to get origin remote URL first
+    try {
+      const originUrl = await execGit(['remote', 'get-url', 'origin'], localPath);
+      if (originUrl) return originUrl;
+    } catch {
+      // origin doesn't exist, try to get first remote
     }
     
-    // If no origin, return the first remote
-    if (remotes.length > 0 && remotes[0].refs.fetch) {
-      return remotes[0].refs.fetch;
+    // Get list of remotes
+    const remotesOutput = await execGit(['remote'], localPath);
+    const remotes = remotesOutput.split('\n').filter(Boolean);
+    
+    if (remotes.length > 0) {
+      const url = await execGit(['remote', 'get-url', remotes[0]], localPath);
+      if (url) return url;
     }
     
     throw new Error('No remote URL found in repository');
