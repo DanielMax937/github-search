@@ -43,7 +43,7 @@ Analysis result should be English.
 
     const { stdout, stderr } = await execAsync(command, {
       maxBuffer: 10 * 1024 * 1024, // 10MB buffer
-      timeout: 300000, // 5 minute timeout
+      timeout: 900000, // 15 minute timeout
     });
 
     if (stderr && !stderr.includes('warning')) {
