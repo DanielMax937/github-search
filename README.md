@@ -101,12 +101,18 @@ OPENAI_BASE_URL=https://api.openai.com/v1  # Optional, defaults to OpenAI API
 GOOGLE_API_KEY=your_google_api_key_here
 GEMINI_CLI_PATH=gemini
 NODE_ENV=development
+
+# GitHub starred repos features (optional)
+GITHUB_TOKEN=your_github_token_here  # For higher rate limits
+NEXT_PUBLIC_UNINDEXED_REPOS_LIMIT=5  # Number of unindexed repos to find
 ```
 
 **Note:** 
 - `OPENAI_API_KEY` is used for embeddings and chat responses
 - `OPENAI_BASE_URL` (optional) - Use custom endpoint/proxy (defaults to `https://api.openai.com/v1`)
 - `GOOGLE_API_KEY` is only used for Gemini CLI code analysis
+- `GITHUB_TOKEN` (optional) - Increases GitHub API rate limit from 60 to 5000 requests/hour
+- `NEXT_PUBLIC_UNINDEXED_REPOS_LIMIT` (optional) - Number of unindexed starred repos to find and display (default: 5)
 
 ### 5. Run database migrations
 
@@ -136,6 +142,20 @@ You have **two ways** to index repositories:
 2. Enter a GitHub repository URL (e.g., `https://github.com/user/repo`)
 3. Click "Index Repository"
 4. Wait for the process to complete (this may take a few minutes)
+
+**⭐ Quick Start: Index Your Starred Repos**
+
+The home page also provides quick actions to index your GitHub starred repositories:
+
+1. **Fetch Starred Repos** - Enter your GitHub username and click "Fetch Starred" to browse all your starred repos and batch select ones to index
+
+2. **Find Unindexed Repos** - Click "🔍 Find Unindexed Starred Repos" to automatically:
+   - Search through your starred repositories (pages 1-100)
+   - Find the first N repos that aren't indexed yet (default: 5, configurable via `NEXT_PUBLIC_UNINDEXED_REPOS_LIMIT`)
+   - Display them in a modal with one-click batch indexing
+   - Index them one by one with real-time progress tracking
+
+This makes it easy to keep your most interesting repositories indexed and searchable!
 
 **What happens during indexing:**
 - Repository is cloned to `.temp/` directory in project root
