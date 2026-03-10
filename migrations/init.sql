@@ -41,3 +41,11 @@ DROP TRIGGER IF EXISTS update_repositories_updated_at ON repositories;
 CREATE TRIGGER update_repositories_updated_at BEFORE UPDATE ON repositories
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- Blocked repositories table to hide repos user never wants to index
+CREATE TABLE IF NOT EXISTS blocked_repositories (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    url VARCHAR(500) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+

@@ -13,17 +13,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Query database to check which URLs are already indexed
-    const result = await query(
+    const indexedResult = await query(
       `SELECT url FROM repositories WHERE url = ANY($1::text[])`,
       [urls]
     );
 
-    const indexedUrls = new Set(result.rows.map((row: any) => row.url));
+    const indexedUrls = new Set(indexedResult.rows.map((row: any) => row.url));
+
+    // Query blocked repositories
+    const blockedResult = await query(
+      `SELECT url FROM blocked_repositories WHERE url = ANY($1::text[])`,
+      [urls]
+    );
+
+    const blockedUrls = new Set(blockedResult.rows.map((row: any) => row.url));
 
     // Return which URLs are indexed and which are not
     const urlsStatus = urls.map(url => ({
       url,
-      isIndexed: indexedUrls.has(url)
+      isIndexed: indexedUrls.has(url),
+      isBlocked: blockedUrls.has(url),
     }));
 
     return NextResponse.json({

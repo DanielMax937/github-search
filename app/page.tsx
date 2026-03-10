@@ -220,13 +220,15 @@ export default function IndexPage() {
 
         const checkData = await checkResponse.json();
         const urlStatusMap = new Map(
-          checkData.urlsStatus.map((item: any) => [item.url, item.isIndexed])
+          checkData.urlsStatus.map((item: any) => [item.url, item])
         );
 
-        // Find unindexed repos
-        const unindexedInThisPage = repos.filter(
-          repo => !urlStatusMap.get(repo.url)
-        );
+        // Find unindexed and not-blocked repos
+        const unindexedInThisPage = repos.filter((repo) => {
+          const status = urlStatusMap.get(repo.url);
+          if (!status) return true;
+          return !status.isIndexed && !status.isBlocked;
+        });
 
         // Add to our list
         for (const repo of unindexedInThisPage) {
@@ -302,6 +304,29 @@ export default function IndexPage() {
     setTimeout(() => {
       router.push('/repos');
     }, 2000);
+  }
+
+  async function handleBlockRepo(url: string) {
+    try {
+      const response = await fetch('/api/block-repo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        console.error('Failed to block repository:', data.error || data.details);
+        return;
+      }
+
+      // Remove blocked repo from unindexed list
+      setUnindexedRepos((prev) => prev.filter((repo) => repo.url !== url));
+    } catch (error) {
+      console.error('Error blocking repository:', error);
+    }
   }
 
   return (
@@ -739,6 +764,18 @@ export default function IndexPage() {
                             </svg>
                             {repo.stars}
                           </span>
+                        </div>
+                        <div className="mt-2">
+                          <button
+                            type="button"
+                            onClick={() => handleBlockRepo(repo.url)}
+                            className="inline-flex items-center gap-2 text-xs font-medium text-red-500 hover:text-red-400"
+                            title="Block this repository so it will not appear in Unindexed Repositories again"
+                            aria-label={`Block ${repo.fullName}`}
+                          >
+                            <span aria-hidden="true">🚫</span>
+                            <span>Block this repo</span>
+                          </button>
                         </div>
                         {currentIndexingRepo === repo.fullName && (
                           <div className="mt-2 text-sm text-blue-600 dark:text-blue-400 font-medium">
